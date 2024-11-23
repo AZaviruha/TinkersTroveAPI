@@ -1,0 +1,6 @@
+@TinkersTrove.Api_HostAddress = http://localhost:5007
+
+GET {{TinkersTrove.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
