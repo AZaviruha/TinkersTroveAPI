@@ -11,12 +11,13 @@ public class ApplicationDbContext : DbContext
     }
     
     public DbSet<Category> Categories { get; set; }
+    public DbSet<Product> Products { get; set; }
+    public DbSet<Price> Prices { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.Entity<Category>()
-            .HasMany(c => c.ChildCategories)
-            .WithOne(c => c.ParentCategory)
-            .HasForeignKey(c => c.ParentCategoryId);
+        base.OnModelCreating(modelBuilder);
+        
+        modelBuilder.ApplyConfigurationsFromAssembly(typeof(ApplicationDbContext).Assembly);
     }
 }
