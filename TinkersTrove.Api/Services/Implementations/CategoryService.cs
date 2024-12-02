@@ -8,13 +8,22 @@ using InvalidOperationException = System.InvalidOperationException;
 
 namespace TinkersTrove.Api.Services.Implementations;
 
-public class CategoryService(
-    ApplicationDbContext context,
-    IMapper mapper) : ICategoryService
+public class CategoryService : EntityService<Category>, ICategoryService
 {
+    private readonly ApplicationDbContext _context;
+    private readonly IMapper _mapper;
+    
+    public CategoryService(
+        ApplicationDbContext context,
+        IMapper mapper) : base(context)
+    {
+        _context = context;
+        _mapper = mapper;
+    }
+    
     public async Task<IEnumerable<CategoryDto>> GetCategoriesAsync(int? parentId, bool shouldIncludeChildren)
     {
-        var query = context.Categories.AsNoTracking();
+        var query = _context.Categories.AsNoTracking();
 
         query = parentId.HasValue
             ? query.Where(c => c.ParentCategoryId == parentId)
@@ -24,16 +33,16 @@ public class CategoryService(
         {
             query = query.Include(c => c.ChildCategories);
         }
-
+        
         var categories = await query.ToListAsync();
-        var categoryDtos = mapper.Map<IEnumerable<CategoryDto>>(categories);
+        var categoryDtos = _mapper.Map<IEnumerable<CategoryDto>>(categories);
 
         return categoryDtos;
     }
 
     public async Task<CategoryDto?> GetCategoryByIdAsync(int id, bool shouldIncludeChildren)
     {
-        var query = context.Categories.AsQueryable();
+        var query = _context.Categories.AsQueryable();
             
         if (shouldIncludeChildren)
         {
@@ -46,14 +55,14 @@ public class CategoryService(
             return null;
         }
 
-        var categoryDto = mapper.Map<CategoryDto>(category);
+        var categoryDto = _mapper.Map<CategoryDto>(category);
         return categoryDto;
     }
     
     // TODO: move common selector logic to BaseService.GetByQueryAsync
     public async Task<CategoryDto?> GetCategoryByNameAsync(string name, bool shouldIncludeChildren)
     {
-        var query = context.Categories.AsQueryable();
+        var query = _context.Categories.AsQueryable();
             
         if (shouldIncludeChildren)
         {
@@ -66,24 +75,24 @@ public class CategoryService(
             return null;
         }
 
-        var categoryDto = mapper.Map<CategoryDto>(category);
+        var categoryDto = _mapper.Map<CategoryDto>(category);
         return categoryDto;
     }
 
     public async Task<CategoryDto> CreateCategoryAsync(CategoryDto categoryDto)
     {
-        var category = mapper.Map<Category>(categoryDto);
+        var category = _mapper.Map<Category>(categoryDto);
 
-        context.Categories.Add(category);
-        await context.SaveChangesAsync();
+        _context.Categories.Add(category);
+        await _context.SaveChangesAsync();
 
-        var createdCategoryDto = mapper.Map<CategoryDto>(category);
+        var createdCategoryDto = _mapper.Map<CategoryDto>(category);
         return createdCategoryDto;
     }
 
     public async Task<CategoryDto?> UpdateCategoryAsync(int id, CategoryDto categoryDto)
     {
-        var existingCategory = await context.Categories.FindAsync(id);
+        var existingCategory = await _context.Categories.FindAsync(id);
         if (existingCategory == null)
         {
             return null;
@@ -92,15 +101,15 @@ public class CategoryService(
         existingCategory.Name = categoryDto.Name;
         existingCategory.ParentCategoryId = categoryDto.ParentCategoryId;
 
-        await context.SaveChangesAsync();
+        await _context.SaveChangesAsync();
 
-        var updatedCategoryDto = mapper.Map<CategoryDto>(existingCategory);
+        var updatedCategoryDto = _mapper.Map<CategoryDto>(existingCategory);
         return updatedCategoryDto;
     }
 
     public async Task DeleteCategoryAsync(int id)
     {
-        var existingCategory = await context.Categories
+        var existingCategory = await _context.Categories
             .Include(c => c.ChildCategories)
             .FirstOrDefaultAsync();
         
@@ -114,7 +123,7 @@ public class CategoryService(
             throw new InvalidOperationException("Cannot delete a category that has child categories");
         }
 
-        context.Categories.Remove(existingCategory);
-        await context.SaveChangesAsync();
+        _context.Categories.Remove(existingCategory);
+        await _context.SaveChangesAsync();
     }
 }

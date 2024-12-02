@@ -25,8 +25,7 @@ public class CategoriesController(ICategoryService sCategories) : ControllerBase
         }
 
         var createdCategoryDto = await sCategories.CreateCategoryAsync(categoryDto);
-        // return CreatedAtRoute("GetVilla", new { id = villa.Id }, villa);
-        return Ok(createdCategoryDto);
+        return CreatedAtRoute("GetCategoryById", new { id = createdCategoryDto.Id }, createdCategoryDto);
     }
 
     [HttpGet]
@@ -39,7 +38,7 @@ public class CategoriesController(ICategoryService sCategories) : ControllerBase
         return Ok(categories);
     }
     
-    [HttpGet("{id}")]
+    [HttpGet("{id:int}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<CategoryDto?>> GetCategoryById(
@@ -55,13 +54,18 @@ public class CategoriesController(ICategoryService sCategories) : ControllerBase
         return NotFound();
     }
     
-    [HttpPut("{id}")]
+    [HttpPut("{id:int}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<CategoryDto?>> UpdateCategoryById(
         int id,
         [FromBody] CategoryDto? categoryDto)
     {
+        if (categoryDto == null)
+        {
+            return BadRequest();
+        }
+        
         var updatedCategoryDto = await sCategories.UpdateCategoryAsync(id, categoryDto);
         if (updatedCategoryDto != null)
         {
@@ -71,7 +75,7 @@ public class CategoriesController(ICategoryService sCategories) : ControllerBase
         return NotFound();
     }
     
-    [HttpDelete("{id}")]
+    [HttpDelete("{id:int}")]
     [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<CategoryDto?>> DeleteCategoryById(int id)

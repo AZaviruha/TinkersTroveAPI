@@ -9,6 +9,6 @@ public class Price
     public DateTime EffectiveDate { get; init; }
     
     public int ProductId { get; init; }
-    
-    public Product Product { get; init; }
+
+    public Product Product { get; init; } = null!;
 }
